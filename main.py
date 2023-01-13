@@ -2,34 +2,54 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from pybit import usdt_perpetual
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+from datetime import datetime
+from tradingview_ta import TA_Handler, Interval
 
 app = FastAPI()
 
 class Msg(BaseModel):
     msg: str
 
+config = {
+  "type": "service_account",
+  "project_id": "tradingview-ta",
+  "private_key_id": "87264596c1d9b69a1c8ae2e6404df888304c6c89",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDW/P/n2YYYA34b\nqOHIm8kYyCX9jUyuBbmdVu6AL8SVYTTzDXyqfB3L5JuKS5RPpQ7Spt4d/18qsNJZ\nvukKrGF5B4GO2gBc9KxeOXSjtI5E2MvpfF0V+V2WyeQi8l/6dWkzbFgNdsKhbxR7\nKSBA8Sf/yKK1Wr4sn//End7B2Em1MQEy6KAvUBeFMAWyHQfR+srf7+5giJ05GDT3\nAYc6U0gX6Ta47bnctZy6Cx23tYEYSU2X7aMTt27U0V3+Cr1BPQFhwlCksFtdvPfU\n2bcvlGhN7cfoJKZvUBb/WwlyKY55j9k6wNBUvciByaq02bmt6yH5Kh6g0G+bMSQB\nQcVcEo2PAgMBAAECggEABWE/ZiXjXSZ5OWf4fnSni582lCm9CX3LL0zFmx+W48YS\n9SIZRIrmk/uciNFrXLLctBjI5idF0mOqX+SPIF0/8y9k5pY9/BWDWrhFWvNhvAdQ\n0v7xtWMQHH3g358BF9toTokfiva12CRXdt2ImRdv0M7Mg41JxQQb+meY83DeJ1KO\n3UPiMgxFhkiaft5c/FjBYsS94mprqf+fvdzvjpySxsWFkMi/YMQNvRWBdRldWlcO\nhDfs0I+uUHDS+bDS4sSWe8oQECKv2uT6GMPvtMqSGZPXdpnDhb+MWBUZ6ZDEAqaO\nkKMGedhyFd1aVp/ybmk4hVvdb132/Em669PH/PgeAQKBgQDzbEupBpKGiwlbDbR4\nppZxHEeiwb1DpMvPkq+D1PfIGr75B+m+vbhB4uZrj50wwlNjBo4Dfe6pZ1Vb+rXU\ngnKnt09lglmsntVhp4+/JpJGBaFug7mjAgIkXZF5W5vLN5V7aLq9T6LEffm6fToa\nXsASlW8BcghhjagDMZ3BCsj9oQKBgQDiGJqNVe+VkstiS5xoCMdbtjaN7+regk1f\nik1rvWBHRYw3tkYkGDXIjjUoYljeHlNw7MccYyGcMu0dF/fI9xFV3FCZnsmSZrxZ\nVs5EGOMWZVds/dOUXJdMmhGuRFcx3azAmZSS4k7Z0fLfXLruPR19gQRbHgRA5rY1\nLEDEgzjdLwKBgQCGRITTPcnSppxJehzCs/ileVjWIJE534t/+kQProfh+0a9bCz1\nRgZ9aR950uR8gaOnKnVo3ayoClReAMMM7cs6UXVc43J9Mbs3O0qhwC/MqcxqfgQG\nMtRlpKraSrp7dDRittjSFTwNsALwZ6SF6R9+4KgzHugajx1Oba67TSyiIQKBgAMb\nvXw18z5GL1+hlHvlqv/6yFM5Oixm9DNdDmVtzBYOwbe+XMaAQrUIJ3jvqTMcjZ8e\n0jn0rvCbzqC4xKJRqz5X8g+6nCDUIsDDrcBH609Sg1ovPypp/3aBI78Wl3BLEOXw\n9pbyX40lEsa5WqSN2IryLCIojnxp75VZj2ZkO3LnAoGASsKcFXrT6ZMmOksChJbJ\nLHy+mPXFtmSesdLI1z5cmzT4grFOpwj0DYBt+UKXNxUS4louYOnlqL3BSHFZi1Fy\n/NBTwVF8y6ab+gxN132rtX+Ymw7HqQAAR4h8bDle6sJBAMTnVeE89QsVt5PccYNh\nUjJ0FLrx2jaIz6oAkJDPOJA=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-ve142@tradingview-ta.iam.gserviceaccount.com",
+  "client_id": "110504407709270842010",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-ve142%40tradingview-ta.iam.gserviceaccount.com"
+}
 
-@app.get("/")
-async def root():
-    session = usdt_perpetual.HTTP(
+
+cred = credentials.Certificate(config)
+try:
+  firebase_admin.initialize_app(cred)
+except:
+  pass
+db = firestore.client()
+
+session = usdt_perpetual.HTTP(
     endpoint='https://api-testnet.bybit.com', 
     api_key='PRolvgqOeFK0hgRX9U',
     api_secret='3pbo67HXceEB1hJ3qjqPFuFtL58sPa4bz54e'
 )
+
+itvs = [Interval.INTERVAL_30_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_2_HOURS,Interval.INTERVAL_4_HOURS,Interval.INTERVAL_1_DAY]
+
+
+@app.get("/")
+async def root():
     BTC_data = session.latest_information_for_symbol(symbol='BTCUSDT')
-    return BTC_data
+    time = BTC_data['time_now']
+    time = datetime.fromtimestamp(float(time))
+    time = f'{str(time.year)}-{str(time.month).zfill(2)}-{str(time.day).zfill(2)} {str(time.hour).zfill(2)}:{str(time.minute).zfill(2)}:{str(time.second).zfill(2)}'
 
+    price = BTC_data['result'][0]['last_price']
 
-@app.get("/path")
-async def demo_get():
-    return {"message": "This is /path endpoint, use a post request to transform the text to uppercase"}
-
-
-@app.post("/path")
-async def demo_post(inp: Msg):
-    return {"message": inp.msg.upper()}
-
-
-@app.get("/path/{path_id}")
-async def demo_get_path_id(path_id: int):
-    return {"message": f"This is /path/{path_id} endpoint, use post request to retrieve result"}
+    return price
