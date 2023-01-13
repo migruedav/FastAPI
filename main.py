@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from pybit import usdt_perpetual
+
 app = FastAPI()
 
 class Msg(BaseModel):
@@ -9,7 +11,13 @@ class Msg(BaseModel):
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World. Welcome to FastAPI tvadec!"}
+    session = usdt_perpetual.HTTP(
+    endpoint='https://api-testnet.bybit.com', 
+    api_key='PRolvgqOeFK0hgRX9U',
+    api_secret='3pbo67HXceEB1hJ3qjqPFuFtL58sPa4bz54e'
+)
+    BTC_data = session.latest_information_for_symbol(symbol='BTCUSDT')
+    return BTC_data
 
 
 @app.get("/path")
