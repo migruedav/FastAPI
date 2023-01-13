@@ -52,4 +52,40 @@ async def root():
 
     price = BTC_data['result'][0]['last_price']
 
-    return price
+    for i in itvs:  
+        BTC = TA_Handler(symbol="BTCUSDT.P",screener="CRYPTO",exchange="BYBIT",interval=i)
+
+        indicators = {}
+
+        all_indicators = BTC.get_indicators()
+        all_indicatorsnot = [
+            'Recommend.Other', 'Recommend.All', 'Recommend.MA', 'close', 'open',
+            'volume', 'change', 'low', 'high'
+        ]
+
+        for k, v in all_indicators.items():
+            if (k not in all_indicatorsnot) and (k[-3:] != '[1]') and (
+                k[-3:] != '[2]') and (k[:3] != 'Rec'):
+                indicators[k] = v
+
+        for k, v in indicators.items():
+            index = list(indicators).index(k)
+            if index > 14:
+                indicators[k] = float(price) - v
+
+        #FIRESTORE SET PRICE TIME AND INDICATORS
+            db.collection(f'BTC{str(i)}').document(time).set({'indicators': indicators},merge=True)
+                                                    
+        #BNS
+        bns = {}
+        oscillators = BTC.get_analysis().oscillators
+        for k, v in oscillators['COMPUTE'].items():
+            bns[k] = v
+
+        moving_averages = BTC.get_analysis().moving_averages
+        for k, v in moving_averages['COMPUTE'].items():
+            bns[k] = v
+
+        db.collection(f'BTC{str(i)}').document(time).set({'bns': bns}, merge=True)
+
+    return 'Database Actualizado'
