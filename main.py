@@ -52,6 +52,11 @@ async def root():
 
     price = BTC_data['result'][0]['last_price']
 
+    for i in itvs:
+        db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': BTC_data['time_now']}, merge=True)
+
+  #TRADINGVIEW INDICATORS
+
     for i in itvs:  
         BTC = TA_Handler(symbol="BTCUSDT.P",screener="CRYPTO",exchange="BYBIT",interval=i)
 
@@ -64,8 +69,7 @@ async def root():
         ]
 
         for k, v in all_indicators.items():
-            if (k not in all_indicatorsnot) and (k[-3:] != '[1]') and (
-                k[-3:] != '[2]') and (k[:3] != 'Rec'):
+            if (k not in all_indicatorsnot) and (k[-3:] != '[1]') and (k[-3:] != '[2]') and (k[:3] != 'Rec'):
                 indicators[k] = v
 
         for k, v in indicators.items():
@@ -73,19 +77,35 @@ async def root():
             if index > 14:
                 indicators[k] = float(price) - v
 
+        Pivots = {}
+        for k,v in indicators.items():
+            if k[:5] == 'Pivot':
+                Pivots[k]=v
+
+        moving_averages_ta = {}
+        for k,v in indicators.items():
+            if (k[:3] == 'EMA')  or (k[:3] == 'SMA') or (k[:3] == 'VWM') or (k[:3] == 'Ich') or (k[:3] == 'Hul'):
+                moving_averages_ta[k]=v
+
+        oscillators_ta = {}
+        for k,v in indicators.items():
+            if (k[:3] != 'EMA')  and (k[:3] != 'SMA') and (k[:3] != 'VWM') and (k[:3] != 'Ich') and (k[:3] != 'Hul') and (k[:5] != 'Pivot'):
+                oscillators_ta[k]=v
+
         #FIRESTORE SET PRICE TIME AND INDICATORS
-            db.collection(f'BTC{str(i)}').document(time).set({'indicators': indicators},merge=True)
+        db.collection(f'BTC{str(i)}').document(time).set({'moving_averages_ta': moving_averages_ta,'pivots':Pivots,'oscillators_ta':oscillators_ta}, merge=True)
                                                     
         #BNS
-        bns = {}
+        bns_oscillators = {}
+        bns_ma = {}
         oscillators = BTC.get_analysis().oscillators
         for k, v in oscillators['COMPUTE'].items():
-            bns[k] = v
+            bns_oscillators[k] = v
 
         moving_averages = BTC.get_analysis().moving_averages
         for k, v in moving_averages['COMPUTE'].items():
-            bns[k] = v
+            bns_ma[k] = v
 
-        db.collection(f'BTC{str(i)}').document(time).set({'bns': bns}, merge=True)
+        db.collection(f'BTC{str(i)}').document(time).set({'oscillators_bns': bns_oscillators,'moving_averages_bns':bns_ma}, merge=True)
 
     return 'Database Actualizado'
