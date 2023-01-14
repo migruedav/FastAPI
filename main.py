@@ -109,3 +109,37 @@ async def root():
         db.collection(f'BTC{str(i)}').document(time).set({'oscillators_bns': bns_oscillators,'moving_averages_bns':bns_ma}, merge=True)
 
     return 'Database Actualizado'
+
+
+
+@app.get("/results")
+async def root():
+
+    docs = db.collection('BTC1d').get()
+    data = [i.to_dict() for i in docs]
+
+    for i in data:
+        stopper = False
+        if 'result' in i:
+            pass
+        else:
+            print(int(float(i['start_timestamp'])))
+            print(i['price'])
+            price = float(i['price'])
+            time = int(float(i['start_timestamp']))
+            klines = session.query_kline( symbol="BTCUSDT",interval=5,from_time=time)
+            klines = klines['result']
+            highs = [i['high'] for i in klines]
+            lows = [i['low'] for i in klines]
+            date_time = datetime.fromtimestamp(int(float(i['start_timestamp'])))
+            d = date_time.strftime("%Y-%m-%d %H:%M:%S")
+
+            for j in range(len(highs)):
+                if (stopper == False) and (highs[j]>=price*1.01) and (lows[j]>price*.99):
+                    db.collection('BTC1D').document(d).set({'result':'BUY'},merge=True)
+                    stopper = True
+                elif (stopper == False) and (highs[j]<price*1.01) and (lows[j]<=price*.99):
+                    db.collection('BTC1D').document(d).set({'result':'SELL'},merge=True)
+                    stopper = True
+                else:
+                    pass
