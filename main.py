@@ -143,3 +143,5 @@ async def root():
                     stopper = True
                 else:
                     pass
+    
+    return 'Resultados actualizados'
