@@ -136,10 +136,18 @@ async def root():
 
             for j in range(len(highs)):
                 if (stopper == False) and (highs[j]>=price*1.01) and (lows[j]>price*.99):
-                    db.collection('BTC1D').document(d).set({'result':'BUY'},merge=True)
+                    db.collection('BTC30m').document(d).set({'result':'BUY'},merge=True)
+                    db.collection('BTC1h').document(d).set({'result':'BUY'},merge=True)
+                    db.collection('BTC2h').document(d).set({'result':'BUY'},merge=True)
+                    db.collection('BTC4h').document(d).set({'result':'BUY'},merge=True)
+                    db.collection('BTC1d').document(d).set({'result':'BUY'},merge=True)
                     stopper = True
                 elif (stopper == False) and (highs[j]<price*1.01) and (lows[j]<=price*.99):
-                    db.collection('BTC1D').document(d).set({'result':'SELL'},merge=True)
+                    db.collection('BTC30m').document(d).set({'result':'SELL'},merge=True)
+                    db.collection('BTC1h').document(d).set({'result':'SELL'},merge=True)
+                    db.collection('BTC2h').document(d).set({'result':'SELL'},merge=True)
+                    db.collection('BTC4h').document(d).set({'result':'SELL'},merge=True)
+                    db.collection('BTC1d').document(d).set({'result':'SELL'},merge=True)
                     stopper = True
                 else:
                     pass
