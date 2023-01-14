@@ -5,7 +5,7 @@ from pybit import usdt_perpetual
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-from datetime import datetime
+from datetime import datetime, timedelta
 from tradingview_ta import TA_Handler, Interval
 
 app = FastAPI()
@@ -118,31 +118,33 @@ async def root():
     docs = db.collection('BTC1d').get()
     data = [i.to_dict() for i in docs]
 
+    now = datetime.now()
+    onehourago = now - timedelta(hours=1)
+    onehourago = int(onehourago.timestamp())
+    klines = session.query_kline( symbol="BTCUSDT",interval=1,from_time=onehourago)
+    klines = klines['result']
+    highs = [i['high'] for i in klines]
+    lows = [i['low'] for i in klines]
+
     for i in data:
         stopper = False
         if 'result' in i:
             pass
         else:
-            print(int(float(i['start_timestamp'])))
-            print(i['price'])
             price = float(i['price'])
-            time = int(float(i['start_timestamp']))
-            klines = session.query_kline( symbol="BTCUSDT",interval=5,from_time=time)
-            klines = klines['result']
-            highs = [i['high'] for i in klines]
-            lows = [i['low'] for i in klines]
+            tp = price * 1.01
+            sl = price * 0.99
             date_time = datetime.fromtimestamp(int(float(i['start_timestamp'])))
             d = date_time.strftime("%Y-%m-%d %H:%M:%S")
-
-            for j in range(len(highs)):
-                if (stopper == False) and (highs[j]>=price*1.01) and (lows[j]>price*.99):
+            for r in range(60):
+                if (stopper == False) and (highs[r]>=tp) and (lows[r]>sl):
                     db.collection('BTC30m').document(d).set({'result':'BUY'},merge=True)
                     db.collection('BTC1h').document(d).set({'result':'BUY'},merge=True)
                     db.collection('BTC2h').document(d).set({'result':'BUY'},merge=True)
                     db.collection('BTC4h').document(d).set({'result':'BUY'},merge=True)
                     db.collection('BTC1d').document(d).set({'result':'BUY'},merge=True)
                     stopper = True
-                elif (stopper == False) and (highs[j]<price*1.01) and (lows[j]<=price*.99):
+                elif (stopper == False) and (lows[r]<=sl) and (highs[r]<tp):
                     db.collection('BTC30m').document(d).set({'result':'SELL'},merge=True)
                     db.collection('BTC1h').document(d).set({'result':'SELL'},merge=True)
                     db.collection('BTC2h').document(d).set({'result':'SELL'},merge=True)
@@ -151,5 +153,5 @@ async def root():
                     stopper = True
                 else:
                     pass
-    
-    return 'Resultados actualizados'
+
+        return 'Resultados actualizados'
