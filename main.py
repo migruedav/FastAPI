@@ -127,7 +127,6 @@ async def root():
     timeframes = ['BTC30m','BTC1h','BTC2h','BTC4h','BTC1d']
 
     for i in docs:
-        stopper = False
         if 'result' in i:
             pass
         else:
@@ -136,14 +135,14 @@ async def root():
             tp = price * 1.01
             sl = price * 0.99
             for r in range(60):
-                if (stopper == False) and (highs[r]>=tp):
+                if (highs[r]>=tp) and (lows[r]>sl):
                     for t in timeframes:
                         db.collection(t).document(d).set({'result':'BUY'},merge=True)
-                    stopper = True
-                elif (stopper == False) and (lows[r]<=sl):
+                    break
+                elif (lows[r]<=sl) and (highs[r]<tp):
                     for t in timeframes:
                         db.collection(t).document(d).set({'result':'SELL'},merge=True)
-                    stopper = True
+                    break
                 else:
                     pass
 
