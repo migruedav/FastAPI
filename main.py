@@ -127,7 +127,7 @@ async def root():
     timeframes = ['BTC30m','BTC1h','BTC2h','BTC4h','BTC1d']
 
     for i in docs:
-        if 'result' in i:
+        if 'result' in i.to_dict():
             pass
         else:
             d = i.id
