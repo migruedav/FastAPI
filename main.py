@@ -116,7 +116,6 @@ async def root():
 async def root():
 
     docs = db.collection('BTC1d').get()
-    data = [i.to_dict() for i in docs]
 
     now = datetime.now()
     onehourago = now - timedelta(hours=1)
@@ -127,16 +126,15 @@ async def root():
     lows = [i['low'] for i in klines]
     timeframes = ['BTC30m','BTC1h','BTC2h','BTC4h','BTC1d']
 
-    for i in data:
+    for i in docs:
         stopper = False
         if 'result' in i:
             pass
         else:
-            price = float(i['price'])
+            d = i.id
+            price = float(i.to_dict()['price'])
             tp = price * 1.01
             sl = price * 0.99
-            date_time = datetime.fromtimestamp(int(float(i['start_timestamp'])))
-            d = date_time.strftime("%Y-%m-%d %H:%M:%S")
             for r in range(60):
                 if (stopper == False) and (highs[r]>=tp):
                     for t in timeframes:
