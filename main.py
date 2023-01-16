@@ -122,28 +122,24 @@ async def root():
     onehourago = int(onehourago.timestamp())
     klines = session.query_kline( symbol="BTCUSDT",interval=1,from_time=onehourago)
     klines = klines['result']
-    highs = [i['high'] for i in klines]
-    lows = [i['low'] for i in klines]
     timeframes = ['BTC30m','BTC1h','BTC2h','BTC4h','BTC1d']
 
-    for i in docs:
-        if 'result' in i.to_dict():
-            pass
-        else:
-            d = i.id
-            price = float(i.to_dict()['price'])
-            tp = price * 1.01
-            sl = price * 0.99
-            for r in range(60):
-                if (highs[r]>=tp) and (lows[r]>sl):
-                    for t in timeframes:
-                        db.collection(t).document(d).set({'result':'BUY'},merge=True)
-                    break
-                elif (lows[r]<=sl) and (highs[r]<tp):
-                    for t in timeframes:
-                        db.collection(t).document(d).set({'result':'SELL'},merge=True)
-                    break
-                else:
-                    pass
 
-        return 'Resultados actualizados'
+    for i in docs:
+        d = i.id
+        price = float(i.to_dict()['price'])
+        tp = price *1.01
+        sl = price*.99
+        for k in klines:
+            if k['high']>=tp:
+                end_timestamp = k['open_time']
+                for t in timeframes:
+                    db.collection(t).document(d).set({'result':'BUY','end_timestamp':end_timestamp},merge=True)
+                break
+            elif k['low']<=sl:
+                end_timestamp = k['open_time']
+                for t in timeframes:
+                    db.collection(t).document(d).set({'result':'SELL','end_timestamp':end_timestamp},merge=True)
+                break
+            else:
+                pass
