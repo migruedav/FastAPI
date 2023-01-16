@@ -131,15 +131,17 @@ async def root():
         tp = price *1.01
         sl = price*.99
         for k in klines:
-            if k['high']>=tp:
+            if (k['high']>=tp) and (k['low']>sl):
                 end_timestamp = k['open_time']
                 for t in timeframes:
                     db.collection(t).document(d).set({'result':'BUY','end_timestamp':end_timestamp},merge=True)
                 break
-            elif k['low']<=sl:
+            elif (k['low']<=sl) and (k['high']<tp):
                 end_timestamp = k['open_time']
                 for t in timeframes:
                     db.collection(t).document(d).set({'result':'SELL','end_timestamp':end_timestamp},merge=True)
                 break
             else:
                 pass
+    
+    return 'Resultados Actualizados'
