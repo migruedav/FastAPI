@@ -126,22 +126,25 @@ async def root():
 
 
     for i in docs:
-        d = i.id
-        price = float(i.to_dict()['price'])
-        tp = price *1.01
-        sl = price*.99
-        for k in klines:
-            if k['high']>=tp:
-                end_timestamp = k['open_time']
-                for t in timeframes:
-                    db.collection(t).document(d).set({'result':'BUY','end_timestamp':end_timestamp},merge=True)
-                break
-            elif k['low']<=sl:
-                end_timestamp = k['open_time']
-                for t in timeframes:
-                    db.collection(t).document(d).set({'result':'SELL','end_timestamp':end_timestamp},merge=True)
-                break
-            else:
+            if 'result' in i.to_dict():
                 pass
-    
+            else:
+                id = i.id
+                price = float(i.to_dict()['price'])
+                tp = price *1.01
+                sl = price*.99
+                for k in klines:
+                    if k['high']>=tp:
+                        end_timestamp = k['open_time']
+                        for t in timeframes:
+                            db.collection(t).document(id).set({'result':'BUY','end_timestamp':end_timestamp},merge=True)
+                        break
+                    elif k['low']<=sl:
+                        end_timestamp = k['open_time']
+                        for t in timeframes:
+                            db.collection(t).document(id).set({'result':'SELL','end_timestamp':end_timestamp},merge=True)
+                        break
+                    else:
+                        pass
+                    
     return 'Resultados Actualizados'
