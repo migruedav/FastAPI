@@ -135,12 +135,12 @@ async def root():
                 sl = price*.99
                 for k in klines:
                     if k['high']>=tp:
-                        et = datetime.fromtimestamp(k['open_time'])
+                        et = datetime.utcfromtimestamp(k['open_time'])
                         for t in timeframes:
                             db.collection(t).document(id).set({'result':'BUY','end_time':et},merge=True)
                         break
                     elif k['low']<=sl:
-                        et = datetime.fromtimestamp(k['open_time'])
+                        et = datetime.utcfromtimestamp(k['open_time'])
                         for t in timeframes:
                             db.collection(t).document(id).set({'result':'SELL','end_time':et},merge=True)
                         break
