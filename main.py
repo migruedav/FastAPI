@@ -40,7 +40,7 @@ session = usdt_perpetual.HTTP(
     api_secret='3pbo67HXceEB1hJ3qjqPFuFtL58sPa4bz54e'
 )
 
-itvs = [Interval.INTERVAL_30_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_2_HOURS,Interval.INTERVAL_4_HOURS,Interval.INTERVAL_1_DAY]
+itvs = [Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_30_MINUTES,Interval.INTERVAL_1_HOUR,Interval.INTERVAL_4_HOURS,Interval.INTERVAL_1_DAY]
 
 
 @app.get("/")
@@ -122,7 +122,7 @@ async def root():
     onehourago = int(onehourago.timestamp())
     klines = session.query_kline( symbol="BTCUSDT",interval=1,from_time=onehourago)
     klines = klines['result']
-    timeframes = ['BTC30m','BTC1h','BTC2h','BTC4h','BTC1d']
+    timeframes = ['BTC15m','BTC30m','BTC1h','BTC4h','BTC1d']
 
 
     for i in docs:
