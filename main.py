@@ -46,14 +46,13 @@ itvs = [Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_30_MINUTES,Interval.INTER
 @app.get("/")
 async def root():
     BTC_data = session.latest_information_for_symbol(symbol='BTCUSDT')
-    time = BTC_data['time_now']
-    time = datetime.fromtimestamp(float(time))
-    time = f'{str(time.year)}-{str(time.month).zfill(2)}-{str(time.day).zfill(2)} {str(time.hour).zfill(2)}:{str(time.minute).zfill(2)}:{str(time.second).zfill(2)}'
-
+    time = datetime.utcfromtimestamp(int(float(BTC_data['time_now'])))
+    #time = datetime.fromtimestamp(float(time))
+    #time = f'{str(time.year)}-{str(time.month).zfill(2)}-{str(time.day).zfill(2)} {str(time.hour).zfill(2)}:{str(time.minute).zfill(2)}:{str(time.second).zfill(2)}'
     price = BTC_data['result'][0]['last_price']
 
     for i in itvs:
-        db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': BTC_data['time_now']}, merge=True)
+        db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': time}, merge=True)
 
   #TRADINGVIEW INDICATORS
 
