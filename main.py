@@ -47,8 +47,6 @@ itvs = [Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_30_MINUTES,Interval.INTER
 async def root():
     BTC_data = session.latest_information_for_symbol(symbol='BTCUSDT')
     time = str(datetime.utcfromtimestamp(int(float(BTC_data['time_now']))))
-    #time = datetime.fromtimestamp(float(time))
-    #time = f'{str(time.year)}-{str(time.month).zfill(2)}-{str(time.day).zfill(2)} {str(time.hour).zfill(2)}:{str(time.minute).zfill(2)}:{str(time.second).zfill(2)}'
     price = BTC_data['result'][0]['last_price']
 
     for i in itvs:
@@ -134,12 +132,12 @@ async def root():
                 sl = price*.99
                 for k in klines:
                     if k['high']>=tp:
-                        et = datetime.utcfromtimestamp(k['open_time'])
+                        et = str(datetime.utcfromtimestamp(int(float(k['open_time']))))
                         for t in timeframes:
                             db.collection(t).document(id).set({'result':'BUY','end_time':et},merge=True)
                         break
                     elif k['low']<=sl:
-                        et = datetime.utcfromtimestamp(k['open_time'])
+                        et = str(datetime.utcfromtimestamp(int(float(k['open_time']))))
                         for t in timeframes:
                             db.collection(t).document(id).set({'result':'SELL','end_time':et},merge=True)
                         break
