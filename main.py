@@ -47,7 +47,7 @@ itvs = [Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_30_MINUTES,Interval.INTER
 async def root():
     BTC_data = session.latest_information_for_symbol(symbol = 'BTCUSDT')
     price = BTC_data['result'][0]['last_price']
-    time = datetime.fromtimestamp(int(float(BTC_data['time_now'])))
+    time = str(datetime.fromtimestamp(int(float(BTC_data['time_now']))))
     
     for i in itvs:
         db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': time}, merge=True)
