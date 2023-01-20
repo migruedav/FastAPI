@@ -51,7 +51,7 @@ async def root():
     ts = int(datetime.timestamp(datetime.now()-timedelta(minutes=1)))
     kline = session.query_kline( symbol="BTCUSDT",interval=1,from_time=ts)
     price = kline['result'][0]['close']
-    time = datetime.now()
+    time = str(datetime.now())
 
     for i in itvs:
         db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': time}, merge=True)
