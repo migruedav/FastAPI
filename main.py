@@ -45,9 +45,13 @@ itvs = [Interval.INTERVAL_15_MINUTES,Interval.INTERVAL_30_MINUTES,Interval.INTER
 
 @app.get("/")
 async def root():
-    BTC_data = session.latest_information_for_symbol(symbol='BTCUSDT')
-    time = str(datetime.utcfromtimestamp(int(float(BTC_data['time_now']))))
-    price = BTC_data['result'][0]['last_price']
+    #BTC_data = session.latest_information_for_symbol(symbol='BTCUSDT')
+    #time = str(datetime.utcfromtimestamp(int(float(BTC_data['time_now']))))
+    #price = BTC_data['result'][0]['last_price']
+    ts = int(datetime.timestamp(datetime.now()-timedelta(minutes=1)))
+    kline = session.query_kline( symbol="BTCUSDT",interval=1,from_time=ts)
+    price = kline['result'][0]['close']
+    time = datetime.now()
 
     for i in itvs:
         db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': time}, merge=True)
