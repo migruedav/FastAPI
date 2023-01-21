@@ -50,7 +50,7 @@ async def root():
     time = str(datetime.fromtimestamp(int(float(BTC_data['time_now']))))
     
     for i in itvs:
-        db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_timestamp': time}, merge=True)
+        db.collection(f'BTC{str(i)}').document(time).set({'price': price,'start_time': time}, merge=True)
 
   #TRADINGVIEW INDICATORS
 
